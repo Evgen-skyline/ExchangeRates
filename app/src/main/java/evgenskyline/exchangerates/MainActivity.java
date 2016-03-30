@@ -59,6 +59,7 @@ public class MainActivity extends Activity {
 
 //////////////////////////
         hMap = new HashMap<String, MoneyBox>(50);
+        final MoneyBox[] mbCol = new MoneyBox[200];
 //////////////////////////
         Thread t = new Thread(new Runnable() {
             @Override
@@ -104,7 +105,7 @@ public class MainActivity extends Activity {
                     //следующая хуйня работает
                     URL input = new URL(mURL);
                     XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-                    factory.setNamespaceAware(true);
+                    factory.setNamespaceAware(false);
                     XmlPullParser xpp = factory.newPullParser();
                     xpp.setInput(input.openStream(), null);
 
@@ -125,13 +126,34 @@ public class MainActivity extends Activity {
                         eventType = xpp.next();
                     }
                     */
-                    int eventType = xpp.getEventType();
-                    while (eventType != XmlPullParser.END_DOCUMENT) {
-                        if (eventType == XmlPullParser.START_TAG && xpp.getName().equals("currency")){
-                            //доделать парсинг и фильтр
 
+                    int i =-1;
+                    //int eventType = xpp.getEventType();
+
+                    while (xpp.getEventType() != XmlPullParser.END_DOCUMENT) {
+
+                        if (xpp.getEventType() == XmlPullParser.START_TAG ){
+                            //&& xpp.getName().equals("currency")
+                            //strTMP = xpp.getName();
+                            //MoneyBox mb = new MoneyBox();
+                            //++i;
+                            //xpp.next();
+
+                            xpp.next();
+                            strTMP = xpp.getName();
+
+                            if (xpp.getEventType() == XmlPullParser.START_TAG && xpp.getName().equals("r030")){
+                                xpp.next();
+                                if(xpp.getEventType()==XmlPullParser.TEXT){
+                                    //mb.someThing = xpp.getText();
+                                    //mbCol[i] = mb;
+                                    strTMP ="ffff";
+                                }
+                            }
+                            break;
                         }
-                        eventType = xpp.next();
+                        xpp.next();
+                        //strTMP = xpp.getName();
                     }
                 }catch (Throwable e){
                     strTMP="something error in parsing";
@@ -151,10 +173,14 @@ public class MainActivity extends Activity {
             }
         }
         Toast.makeText(MainActivity.this, "data received", Toast.LENGTH_SHORT).show();
-
-            mTextView.setText(strTMP2);
-            if(strTMP2 == "" | strTMP2== null){
-                mTextView.setText("EMPTY");
+        m2TextView.setText(strTMP);
+            try {
+                mTextView.setText(mbCol[0].someThing);
+                if (strTMP2 == "" | strTMP2 == null) {
+                    mTextView.setText("EMPTY");
+                }
+            }catch (Exception e){
+                mTextView.setText(e.toString());
             }
 
 //================================================================================================//
