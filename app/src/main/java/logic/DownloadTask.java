@@ -7,7 +7,9 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import evgenskyline.exchangerates.MainActivity.*;
 
@@ -15,7 +17,8 @@ import evgenskyline.exchangerates.MainActivity.*;
  * Created by evgen on 01.04.2016.
  */
 public class DownloadTask extends AsyncTask<String, Integer, HashMap<String, MoneyBox>> {
-    //ProgressDialog progressDialog;
+    //String[] arrayStr;
+    ArrayList<String> list;
 
     @Override
     protected void onPreExecute() {
@@ -26,6 +29,10 @@ public class DownloadTask extends AsyncTask<String, Integer, HashMap<String, Mon
     protected HashMap<String, MoneyBox> doInBackground(String... params) {
         HashMap<String, MoneyBox> hMap = new HashMap<String, MoneyBox>(50);
         String mURL = params[0];
+        //arrayList = new ArrayList<String>();
+        //arrayStr = new String[100];
+        //int i =0;
+        list = new ArrayList<String>();
         try {
             URL input = new URL(mURL);//url с адресом xml
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();//получаем фабрику
@@ -34,32 +41,35 @@ public class DownloadTask extends AsyncTask<String, Integer, HashMap<String, Mon
             xpp.setInput(input.openStream(), null);
 
             while (xpp.getEventType() != XmlPullParser.END_DOCUMENT) {
-                if(xpp.getEventType()==XmlPullParser.START_TAG && xpp.getName().equals("currency")){
+                if(xpp.getEventType()==XmlPullParser.START_TAG && xpp.getName().equals("currency")) {
                     MoneyBox mb = new MoneyBox();
-                    //xpp.next();
-                    while(!(xpp.getName().equals("r030"))){ xpp.nextTag();};xpp.next();
-                    //strTMP2 += xpp.getText() + "\n";
-                    mb.someThing = xpp.getText();
-                    xpp.next();
-                    while(!xpp.getName().equals("txt")){xpp.nextTag();};xpp.next();
-                    //strTMP2 += xpp.getText() + "\n";
-                    mb.ukrName = xpp.getText();
-                    xpp.next();
-                    while(!xpp.getName().equals("rate")){xpp.nextTag();};xpp.next();
-                    //strTMP2 += xpp.getText() + "\n";
-                    mb.rate = xpp.getText();
-                    xpp.next();
-                    while(!xpp.getName().equals("cc")){xpp.nextTag();};xpp.next();
-                    //strTMP2 += xpp.getText() + "\n";
-                    mb.name = xpp.getText();
-                    xpp.next();
-                    while(!xpp.getName().equals("exchangedate")){xpp.nextTag();};xpp.next();
-                    //strTMP2 += xpp.getText() + "\n";
-                    mb.exchangedate = xpp.getText();
-                    xpp.next();
-                    hMap.put(mb.name, mb);
+                    while (!(xpp.getName().equals("r030"))) {xpp.nextTag();};
+                        xpp.next();
+                        mb.someThing = xpp.getText();
+                        xpp.next();
+                    while (!xpp.getName().equals("txt")) {xpp.nextTag();};
+                        xpp.next();
+                        mb.ukrName = xpp.getText();
+                        xpp.next();
+                    while (!xpp.getName().equals("rate")) {xpp.nextTag();};
+                        xpp.next();
+                        mb.rate = xpp.getText();
+                        xpp.next();
+                    while (!xpp.getName().equals("cc")) {xpp.nextTag();};
+                        xpp.next();
+                        mb.name = xpp.getText();
+                        xpp.next();
+                    while (!xpp.getName().equals("exchangedate")) {xpp.nextTag();};
+                        xpp.next();
+                        mb.exchangedate = xpp.getText();
+                        mb.id = mb.name + " " + mb.ukrName;
+                        hMap.put(mb.id, mb);
+                        list.add(mb.id);
+                        xpp.next();
                 }
-                xpp.nextTag();
+                if(xpp.getEventType() != XmlPullParser.END_DOCUMENT) {
+                    xpp.next();
+                }else break;
             }
         }catch (Throwable e){
             MoneyBox mb = new MoneyBox();//это конечно бред, но так меньше писать
@@ -78,4 +88,8 @@ public class DownloadTask extends AsyncTask<String, Integer, HashMap<String, Mon
     protected void onPostExecute(HashMap<String, MoneyBox> hMap) {
         super.onPostExecute(hMap);
     }
+    public ArrayList<String> getMyArrayList(){
+        return list;
+    }
+
 }
