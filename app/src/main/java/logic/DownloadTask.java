@@ -2,6 +2,7 @@ package logic;
 
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
+import android.widget.TextView;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -11,7 +12,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import evgenskyline.exchangerates.MainActivity;
 import evgenskyline.exchangerates.MainActivity.*;
+import evgenskyline.exchangerates.R;
 
 /**
  * Created by evgen on 01.04.2016.
@@ -23,15 +26,14 @@ public class DownloadTask extends AsyncTask<String, Integer, HashMap<String, Mon
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
+
+
     }
 
     @Override
     protected HashMap<String, MoneyBox> doInBackground(String... params) {
         HashMap<String, MoneyBox> hMap = new HashMap<String, MoneyBox>(50);
         String mURL = params[0];
-        //arrayList = new ArrayList<String>();
-        //arrayStr = new String[100];
-        //int i =0;
         list = new ArrayList<String>();
         try {
             URL input = new URL(mURL);//url с адресом xml
