@@ -1,8 +1,7 @@
 package evgenskyline.exchangerates;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -12,16 +11,18 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 
-import logic.DownloadTask;
-
 //AppCompatActivity
  public class MainActivity extends Activity {
 
-    public static class MoneyBox{
+    public static class MoneyBox {
         public String someThing;
         public String ukrName;
         public String rate;
@@ -30,9 +31,9 @@ import logic.DownloadTask;
         public String id;
     }
 
-    private TextView mTextView, m2TextView;
+    public static TextView mTextView, m2TextView;
     private EditText editText;
-    private static final String mURL ="http://bank.gov.ua/NBUStatService/v1/statdirectory/exchange.xml";
+    private static final String mURL = "http://bank.gov.ua/NBUStatService/v1/statdirectory/exchange.xml";
     private static String mURL_DATE = "http://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=";
     //"http://bank.gov.ua/NBUStatService/v1/statdirectory/exchange.xml"; //основной
     //"http://xml.nsu.ru/xml/note.xml"; //тестовый
@@ -40,21 +41,24 @@ import logic.DownloadTask;
     HashMap<String, MoneyBox> hMap;
     Spinner spinner;
 
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final TextView mTextView, m2TextView;
-        mTextView = (TextView)findViewById(R.id.mTextViev);
-        m2TextView = (TextView)findViewById(R.id.m2textView);
-        editText = (EditText)findViewById(R.id.editText);
-        spinner = (Spinner)findViewById(R.id.spinner);
+        //final TextView mTextView, m2TextView;
+        mTextView = (TextView) findViewById(R.id.mTextViev);
+        m2TextView = (TextView) findViewById(R.id.m2textView);
+        editText = (EditText) findViewById(R.id.editText);
+        spinner = (Spinner) findViewById(R.id.spinner);
         ArrayAdapter<String> arrayAdapter;
         final ArrayList<String> list;
+        //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
-        DownloadTask downloadTask = new DownloadTask();
-        downloadTask.execute(mURL);
+
+        DownloadTask downloadTask = new DownloadTask(mURL);
+        downloadTask.execute();
 
         try {
             hMap = downloadTask.get();
@@ -64,29 +68,34 @@ import logic.DownloadTask;
         }
 
         try {
-        if(hMap.containsKey("Exeption")|| hMap.isEmpty() || hMap == null){
-            String tmp = "error in parsing\nlook at your internet connection\nor server return incorrect data\n";
-            mTextView.setText(tmp);
-            if(hMap.containsKey("Exeption")){
-                mTextView.setText(mTextView.getText() + "\n" + hMap.get("Exeption").name);
+            if (hMap.containsKey("Exeption") || hMap.isEmpty() || hMap == null || hMap.containsKey("maintenance")) {
+                if (hMap.containsKey("maintenance")) {
+                    mTextView.setText(hMap.get("maintenance").name);
+                } else {
+                    String tmp = "error in parsing\nCheck your internet connection\nor server return incorrect data\n";
+                    mTextView.setText(tmp);
+                    if (hMap.containsKey("Exeption")) {
+                        mTextView.setText(mTextView.getText() + "\n" + hMap.get("Exeption").name);
+                    }
+                }
+            } else {
+                Toast.makeText(MainActivity.this, "data received", Toast.LENGTH_SHORT).show();
+                list = downloadTask.getMyArrayList();
+                mShowResult(list, hMap);
             }
-        }else {
-            Toast.makeText(MainActivity.this, "data received", Toast.LENGTH_SHORT).show();
-            list = downloadTask.getMyArrayList();
-            mShowResult(list, hMap);
-            }
-            }catch (Exception e){
-                mTextView.setText(e.toString());
-            }
+        } catch (Exception e) {
+            mTextView.setText(e.toString());
+        }
     }
-//================================================================================================//
+
+    //================================================================================================//
     public void mButtonClicked(View view) {
-        mTextView = (TextView)findViewById(R.id.mTextViev);
-        EditText ed = (EditText)findViewById(R.id.editText);
+        mTextView = (TextView) findViewById(R.id.mTextViev);
+        EditText ed = (EditText) findViewById(R.id.editText);
         String str = ed.getText().toString();
         mURL_DATE += str;
-        DownloadTask downloadTask = new DownloadTask();
-        downloadTask.execute(mURL_DATE);
+        DownloadTask downloadTask = new DownloadTask(mURL_DATE);
+        downloadTask.execute();
         try {
             hMap = downloadTask.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -95,25 +104,29 @@ import logic.DownloadTask;
         }
 
         try {
-            if(hMap.containsKey("Exeption")|| hMap.isEmpty() || hMap == null){
-                String tmp = "error in parsing\nlook at your internet connection\nor server return incorrect data\n";
-                mTextView.setText(tmp);
-                if(hMap.containsKey("Exeption")){
-                    mTextView.setText(mTextView.getText() + "\n" + hMap.get("Exeption").name);
+            if (hMap.containsKey("Exeption") || hMap.isEmpty() || hMap == null || hMap.containsKey("maintenance")) {
+                if (hMap.containsKey("maintenance")) {
+                    mTextView.setText(hMap.get("maintenance").name);
+                } else {
+                    String tmp = "error in parsing\nCheck your internet connection\nor server return incorrect data\n";
+                    mTextView.setText(tmp);
+                    if (hMap.containsKey("Exeption")) {
+                        mTextView.setText(mTextView.getText() + "\n" + hMap.get("Exeption").name);
+                    }
                 }
-            }else {
+            } else {
                 Toast.makeText(MainActivity.this, "data received", Toast.LENGTH_SHORT).show();
                 ArrayList<String> lis;
                 lis = downloadTask.getMyArrayList();
                 mShowResult(lis, hMap);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             mTextView.setText(e.toString());
         }
     }
 
-    private void mShowResult(final ArrayList<String> list, final HashMap<String, MoneyBox> hMap){
-        mTextView = (TextView)findViewById(R.id.mTextViev);
+    private void mShowResult(final ArrayList<String> list, final HashMap<String, MoneyBox> hMap) {
+        mTextView = (TextView) findViewById(R.id.mTextViev);
         ArrayAdapter<String> arrayAdapter;
         arrayAdapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, list);
         arrayAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
@@ -129,14 +142,16 @@ import logic.DownloadTask;
                             mb.name + "\n" +
                             "курс: " + mb.rate;
                     mTextView.setText(result);
-                }catch (Throwable e){
+                } catch (Throwable e) {
                     mTextView.setText(e.toString());
                 }
             }
+
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
     }
 }
+
 
