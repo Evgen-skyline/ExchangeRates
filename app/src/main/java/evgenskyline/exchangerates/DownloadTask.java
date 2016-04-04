@@ -1,7 +1,12 @@
 package evgenskyline.exchangerates;
 
+import android.content.Context;
 import android.os.AsyncTask;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -20,24 +25,23 @@ public  class DownloadTask extends AsyncTask<String, Integer, HashMap<String, Ma
     //String[] arrayStr;
     ArrayList<String> list;
     String mURL;
+    ArrayAdapter<String> arrayAdapter;
+    Context context;
 
-    public DownloadTask (String url){
+    public DownloadTask (String url, Context con){
         super();
         mURL = url;
+        context = con;
     }
 
     @Override
     protected void onPreExecute() {
-        //super.onPreExecute();
-        //MainActivity.this.requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        //MainActivity requestWindowFeature(Window.PROGRESS_VISIBILITY_ON);
         MainActivity.m2TextView.setText("Downloading data...");
     }
 
     @Override
     protected HashMap<String, MoneyBox> doInBackground(String... params) {
         HashMap<String, MoneyBox> hMap = new HashMap<String, MoneyBox>();
-        //String mURL = params[0];
         list = new ArrayList<String>();
         int i = 0; //FOR DEBUG(проверка корректности ответа от сервера(извращённая))
         try {
@@ -80,7 +84,8 @@ public  class DownloadTask extends AsyncTask<String, Integer, HashMap<String, Ma
             }
             if(i < 10){ //maintenance
                 MoneyBox mb = new MoneyBox();
-                mb.name = "Server maintenance\n(работы на сервере)";
+                mb.name = "Server maintenance\n(работы на сервере)\nили неверная дата" +
+                "\nP.S. у НБУ нет курса за выходные дни\nт.е. попробуйте соседнюю дату +/- 2 деня";
                 hMap.put("maintenance", mb);
             }
         }catch (Throwable e){
@@ -104,12 +109,59 @@ public  class DownloadTask extends AsyncTask<String, Integer, HashMap<String, Ma
 
     @Override
     protected void onPostExecute(HashMap<String, MoneyBox> hMap) {
-        //super.onPostExecute(hMap);
-        //MainActivity.this.requestWindowFeature(Window.PROGRESS_VISIBILITY_OFF);
-        MainActivity.m2TextView.setText("Download complete!");
-    }
-    public ArrayList<String> getMyArrayList(){
-        return list;
+        try{
+        if (hMap.containsKey("Exeption") || hMap.isEmpty() || hMap == null ||
+                hMap.containsKey("maintenance") || hMap.containsKey("Error_date")) {
+            if(hMap.containsKey("Error_date")){
+                MainActivity.mTextView.setText("Неподходящая дата");
+            } else {
+                if (hMap.containsKey("maintenance")) {
+                    MainActivity.mTextView.setText(hMap.get("maintenance").name);
+                } else {
+                    String tmp = "error in parsing\nCheck your internet connection\nor server return incorrect data\n";
+                    MainActivity.mTextView.setText(tmp);
+                    if (hMap.containsKey("Exeption")) {
+                        MainActivity.mTextView.setText(MainActivity.mTextView.getText() + "\n" + hMap.get("Exeption").name);
+                    }
+                }
+            }
+        } else {
+            Toast.makeText(context, "data received", Toast.LENGTH_SHORT).show();
+            mShowResult(list, hMap);
+        }
+    } catch (Exception e) {
+        MainActivity.mTextView.setText(e.toString());
     }
 
+        MainActivity.m2TextView.setText("Download complete!");
+    }
+
+    private void mShowResult(final ArrayList<String> list, final HashMap<String, MoneyBox> hMap) {
+        //R.layout.support_simple_spinner_dropdown_item
+        arrayAdapter = new ArrayAdapter<String>(context, R.layout.my_spinner_item, list);
+        //arrayAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
+        MainActivity.spinner.setBackgroundColor(context.getResources().getColor(R.color.mTextColor));
+        MainActivity.spinner.setPopupBackgroundResource(R.color.mTextColor);
+        MainActivity.spinner.setAdapter(arrayAdapter);
+        MainActivity.spinner.setPrompt("Выберите валюту");
+        MainActivity.spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                try {
+                    MoneyBox mb = hMap.get(list.get(position));//где-то тут проблемма
+                    String result = "Данные на " + mb.exchangedate + "\n" +
+                            mb.ukrName + "\n" +
+                            mb.name + "\n" +
+                            "курс: " + mb.rate;
+                    MainActivity.mTextView.setText(result);
+                } catch (Throwable e) {
+                    MainActivity.mTextView.setText(e.toString());
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+    }
 }
