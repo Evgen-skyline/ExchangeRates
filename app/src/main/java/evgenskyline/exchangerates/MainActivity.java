@@ -1,7 +1,6 @@
 package evgenskyline.exchangerates;
 
 import android.app.Activity;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -11,10 +10,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserFactory;
-
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
@@ -34,7 +29,7 @@ import java.util.concurrent.ExecutionException;
     public static TextView mTextView, m2TextView;
     private EditText editText;
     private static final String mURL = "http://bank.gov.ua/NBUStatService/v1/statdirectory/exchange.xml";
-    private static String mURL_DATE = "http://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=";
+    private static final String mURL_DATE = "http://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=";
     //"http://bank.gov.ua/NBUStatService/v1/statdirectory/exchange.xml"; //основной
     //"http://xml.nsu.ru/xml/note.xml"; //тестовый
     //http://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=20160401  //за дату
@@ -93,8 +88,8 @@ import java.util.concurrent.ExecutionException;
         mTextView = (TextView) findViewById(R.id.mTextViev);
         EditText ed = (EditText) findViewById(R.id.editText);
         String str = ed.getText().toString();
-        mURL_DATE += str;
-        DownloadTask downloadTask = new DownloadTask(mURL_DATE);
+        str = mURL_DATE + str;
+        DownloadTask downloadTask = new DownloadTask(str);
         downloadTask.execute();
         try {
             hMap = downloadTask.get();

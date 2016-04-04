@@ -36,14 +36,14 @@ public  class DownloadTask extends AsyncTask<String, Integer, HashMap<String, Ma
 
     @Override
     protected HashMap<String, MoneyBox> doInBackground(String... params) {
-        HashMap<String, MoneyBox> hMap = new HashMap<String, MoneyBox>(50);
+        HashMap<String, MoneyBox> hMap = new HashMap<String, MoneyBox>();
         //String mURL = params[0];
         list = new ArrayList<String>();
         int i = 0; //FOR DEBUG(проверка корректности ответа от сервера(извращённая))
         try {
             URL input = new URL(mURL);//url с адресом xml
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();//получаем фабрику
-            factory.setNamespaceAware(false);
+            factory.setNamespaceAware(true);
             XmlPullParser xpp = factory.newPullParser();
             xpp.setInput(input.openStream(), null);
 
